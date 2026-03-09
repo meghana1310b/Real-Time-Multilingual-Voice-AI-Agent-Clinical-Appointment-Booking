@@ -139,11 +139,7 @@ Reschedule → Should suggest alternative slot if conflict
 
 Language switching → Agent responds in selected language
 
-Submission Guidelines
 
-GitHub Repository: Include complete project code, project structure, and this README.
-
-![alt text](image.png)
 
 
 
