@@ -143,7 +143,7 @@ Submission Guidelines
 
 GitHub Repository: Include complete project code, project structure, and this README.
 
-![Architecture Diagram](docs/architecture-diagram.png)
+![alt text](image.png)
 
 
 
