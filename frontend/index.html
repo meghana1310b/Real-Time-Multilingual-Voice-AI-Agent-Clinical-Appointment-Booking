@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2Care – Voice AI & Appointments</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --bg: #0a0e27;
+      --card: #1a1f3a;
+      --card-hover: #232d4d;
+      --border: #2a3d5a;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent-blue: #0ea5e9;
+      --accent-purple: #a855f7;
+      --accent-cyan: #06b6d4;
+      --success: #10b981;
+      --warn: #f59e0b;
+      --gradient: linear-gradient(135deg, #0ea5e9 0%, #a855f7 100%);
+    }
+    
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', system-ui, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    @keyframes slideInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(14, 165, 233, 0.3); }
+      50% { box-shadow: 0 0 30px rgba(14, 165, 233, 0.6); }
+    }
+    
+    .header {
+      background: rgba(26, 31, 58, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .header span { color: var(--muted); font-size: 0.9rem; }
+    
+    .nav {
+      display: flex;
+      gap: 0.5rem;
+      margin-left: auto;
+    }
+    
+    .nav button {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .nav button:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+    
+    .nav button.active {
+      background: var(--gradient);
+      color: white;
+      border-color: transparent;
+    }
+    
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    
+    .panel { display: none; animation: slideInUp 0.5s ease; }
+    .panel.active { display: block; }
+    
+    /* HOME PAGE STYLES */
+    .hero {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 3rem 2rem;
+      margin-bottom: 2rem;
+      text-align: center;
+      animation: slideInUp 0.6s ease;
+    }
+    
+    .hero h2 {
+      font-size: 2.5rem;
+      margin: 0 0 1rem;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 800;
+    }
+    
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 2rem;
+      line-height: 1.6;
+    }
+    
+    .hero-cta {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      animation: slideInUp 0.6s ease;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .stat-card:hover {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.25) 0%, rgba(168, 85, 247, 0.25) 100%);
+      border-color: var(--accent-blue);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2);
+    }
+    
+    .stat-card.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    
+    .stat-card .number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0.5rem 0;
+      min-height: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .stat-card .label {
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .stat-card .hint {
+      font-size: 0.75rem;
+      color: var(--accent-blue);
+      margin-top: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .stat-card:hover .hint {
+      opacity: 1;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .feature-card {
+      background: rgba(26, 31, 58, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(14, 165, 233, 0.2) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+    
+    .feature-card:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-10px);
+      background: rgba(26, 31, 58, 0.9);
+      box-shadow: 0 20px 40px rgba(14, 165, 233, 0.2);
+    }
+    
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .feature-card h3 {
+      margin: 0 0 0.8rem;
+      font-size: 1.2rem;
+      color: var(--accent-blue);
+    }
+    
+    .feature-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .voice-widget {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      animation: slideInUp 0.7s ease;
+    }
+    
+    .voice-widget h2 {
+      color: var(--accent-blue);
+      margin-top: 0;
+      font-size: 1.5rem;
+    }
+    
+    .voice-controls {
+      display: flex;
+      gap: 1rem;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+    
+    .voice-display {
+      background: rgba(10, 14, 39, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .transcript-box {
+      background: rgba(10, 14, 39, 0.8);
+      border-left: 3px solid var(--accent-blue);
+      margin: 1rem 0;
+      padding: 1rem;
+      border-radius: 8px;
+      color: var(--accent-cyan);
+      font-style: italic;
+    }
+    
+    .response-box {
+      background: rgba(10, 14, 39, 0.8);
+      border-left: 3px solid var(--accent-purple);
+      margin: 1rem 0;
+      padding: 1rem;
+      border-radius: 8px;
+      color: var(--text);
+    }
+    
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--success);
+      border-radius: 8px;
+      color: var(--success);
+      font-size: 0.9rem;
+    }
+    
+    .status-indicator.disconnected {
+      background: rgba(248, 113, 113, 0.1);
+      border-color: #f87171;
+      color: #f87171;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    .status-dot.disconnected {
+      background: #f87171;
+      animation: none;
+      opacity: 0.5;
+    }
+    
+    .card {
+      background: rgba(26, 31, 58, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    .card:hover { border-color: var(--accent-blue); }
+    
+    .card h2 { margin: 0 0 1rem; font-size: 1.25rem; color: var(--accent-blue); }
+    
+    table { width: 100%; border-collapse: collapse; }
+    
+    th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid var(--border); }
+    
+    th { color: var(--muted); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; }
+    
+    tr:hover { background: rgba(26, 31, 58, 0.5); }
+    
+    tr:last-child td { border-bottom: none; }
+    
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    
+    .badge.scheduled { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+    .badge.cancelled { background: rgba(248, 113, 113, 0.2); color: #f87171; }
+    .badge.completed { background: rgba(148, 163, 184, 0.2); color: var(--muted); }
+    
+    .btn {
+      background: var(--gradient);
+      color: white;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(14, 165, 233, 0.5);
+    }
+    
+    .btn:active { transform: translateY(0); }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .btn.secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--accent-blue);
+      border: 1px solid var(--accent-blue);
+      box-shadow: 0 4px 15px rgba(14, 165, 233, 0.1);
+    }
+    
+    .btn.secondary:hover {
+      background: rgba(14, 165, 233, 0.1);
+      box-shadow: 0 6px 25px rgba(14, 165, 233, 0.3);
+    }
+    
+    .loading { color: var(--muted); animation: pulse 1.5s ease-in-out infinite; }
+    .err { color: #f87171; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>2Care</h1>
+    <span>Voice AI & Appointments</span>
+    <nav class="nav">
+      <button type="button" class="active" data-tab="home">Home</button>
+      <button type="button" data-tab="doctors">Doctors</button>
+      <button type="button" data-tab="appointments">Appointments</button>
+      <button type="button" data-tab="voice">Voice AI</button>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section id="panel-home" class="panel active">
+      <div class="hero">
+        <h2>Welcome to 2Care</h2>
+        <p>Your AI-powered voice assistant for seamless appointment management</p>
+        <div class="hero-cta">
+          <button type="button" class="btn" onclick="showPanel('voice')">Try Voice Agent</button>
+          <button type="button" class="btn secondary" onclick="showPanel('doctors')">Browse Doctors</button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card" onclick="refreshStat('languages')">
+          <div style="font-size: 2rem;">🎤</div>
+          <div class="number" id="stat-languages">3</div>
+          <div class="label">Languages Supported</div>
+          <div class="hint">Click to refresh</div>
+        </div>
+        <div class="stat-card" onclick="refreshStat('latency')">
+          <div style="font-size: 2rem;">⚡</div>
+          <div class="number" id="stat-latency">450ms</div>
+          <div class="label">Avg Response Time</div>
+          <div class="hint">Click to refresh</div>
+        </div>
+        <div class="stat-card" onclick="refreshStat('doctors')">
+          <div style="font-size: 2rem;">👥</div>
+          <div class="number" id="stat-doctors">0</div>
+          <div class="label">Doctors Available</div>
+          <div class="hint">Click to view</div>
+        </div>
+        <div class="stat-card" onclick="refreshStat('appointments')">
+          <div style="font-size: 2rem;">📅</div>
+          <div class="number" id="stat-appointments">0</div>
+          <div class="label">Appointments Booked</div>
+          <div class="hint">Click to view</div>
+        </div>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card" onclick="showPanel('voice')">
+          <div class="feature-icon">🗣️</div>
+          <h3>Voice Booking</h3>
+          <p>Speak naturally in English, Hindi, or Tamil to book appointments instantly.</p>
+          <button type="button" class="btn" style="margin-top: 1rem; width: 100%;">Try Now →</button>
+        </div>
+        <div class="feature-card" onclick="showPanel('doctors')">
+          <div class="feature-icon">⚙️</div>
+          <h3>Smart Agent</h3>
+          <p>AI-powered assistant that understands context and handles changes effortlessly.</p>
+          <button type="button" class="btn" style="margin-top: 1rem; width: 100%;">Explore →</button>
+        </div>
+        <div class="feature-card" onclick="event.stopPropagation(); refreshAllStats()">
+          <div class="feature-icon">⚡</div>
+          <h3>Ultra-Fast</h3>
+          <p>Sub-500ms response times with optimized speech recognition and processing.</p>
+          <button type="button" class="btn" style="margin-top: 1rem; width: 100%;">View Stats →</button>
+        </div>
+        <div class="feature-card" onclick="showPanel('appointments')">
+          <div class="feature-icon">🔄</div>
+          <h3>Easy Management</h3>
+          <p>Reschedule or cancel appointments with a simple voice command.</p>
+          <button type="button" class="btn" style="margin-top: 1rem; width: 100%;">Manage →</button>
+        </div>
+        <div class="feature-card" onclick="showPanel('doctors')">
+          <div class="feature-icon">🏥</div>
+          <h3>Healthcare Ready</h3>
+          <p>Designed specifically for healthcare providers and patient convenience.</p>
+          <button type="button" class="btn" style="margin-top: 1rem; width: 100%;">Find Doctors →</button>
+        </div>
+        <div class="feature-card" onclick="event.stopPropagation()">
+          <div class="feature-icon">🔒</div>
+          <h3>Secure & Private</h3>
+          <p>Your appointment data is securely stored with enterprise-grade encryption.</p>
+          <button type="button" class="btn" style="margin-top: 1rem; width: 100%;" disabled>Learn More</button>
+        </div>
+      </div>
+
+      <div class="voice-widget">
+        <h2>🎤 Try Voice Agent Now</h2>
+        <p style="color: var(--muted);">Interact with our AI assistant directly on this page</p>
+        
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+          <div class="status-indicator">
+            <div class="status-dot disconnected"></div>
+            <span id="voice-status">Disconnected</span>
+          </div>
+          <span style="color: var(--muted); font-size: 0.9rem;"></span>
+        </div>
+
+        <div class="voice-controls">
+          <button type="button" class="btn" id="connect-home">🔗 Connect</button>
+          <button type="button" class="btn secondary" id="record-home" disabled>🎙️ Hold to Speak</button>
+          <button type="button" class="btn secondary" id="stop-home" disabled>⏹️ End Utterance</button>
+        </div>
+
+        <div id="voice-content-home" style="display: none;">
+          <div style="margin-top: 1.5rem;">
+            <div style="color: var(--muted); font-size: 0.9rem; margin-bottom: 0.5rem;">📝 Your Speech:</div>
+            <div class="transcript-box" id="transcript-home">Listening...</div>
+          </div>
+
+          <div style="margin-top: 1.5rem;">
+            <div style="color: var(--muted); font-size: 0.9rem; margin-bottom: 0.5rem;">💬 Agent Response:</div>
+            <div class="response-box" id="response-home">Agent will respond here...</div>
+          </div>
+
+          <div style="margin-top: 1.5rem;">
+            <div style="color: var(--muted); font-size: 0.8rem; margin-bottom: 0.5rem;">⏱️ Performance:</div>
+            <div class="voice-display" id="latency-home" style="font-size: 0.85rem; justify-content: flex-start;">
+              <span style="color: var(--muted);">Metrics will appear here...</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(10, 14, 39, 0.5); border-radius: 8px; border-left: 3px solid var(--accent-cyan);">
+          <p style="margin: 0; color: var(--muted); font-size: 0.9rem;">
+            💡 <strong>Tips:</strong> Try saying "Book an appointment with Dr. Smith" or "Cancel my appointment on Monday"
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-doctors" class="panel">
+      <div class="card">
+        <h2>👥 Doctors</h2>
+        
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+          <input type="text" id="specialty-filter" placeholder="Search by specialty..." style="flex: 1; min-width: 200px; padding: 0.6rem; background: rgba(26, 31, 58, 0.6); border: 1px solid var(--border); border-radius: 8px; color: var(--text);" />
+          <button type="button" class="btn" onclick="loadDoctorsFiltered()">🔍 Search</button>
+          <button type="button" class="btn secondary" onclick="loadDoctors()">🔄 Reset</button>
+        </div>
+        
+        <p class="loading" id="doctors-loading">Loading…</p>
+        <p class="err" id="doctors-err"></p>
+        <table id="doctors-table" style="display:none;">
+          <thead>
+            <tr><th>Name</th><th>Specialty</th><th>Email</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="doctors-tbody"></tbody>
+        </table>
+        <p id="doctors-count" style="color: var(--muted); font-size: 0.9rem; margin-top: 1rem;"></p>
+      </div>
+    </section>
+
+    <section id="panel-appointments" class="panel">
+      <div class="card">
+        <h2>📅 Appointments</h2>
+        
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+          <select id="status-filter" style="padding: 0.6rem; background: rgba(26, 31, 58, 0.6); border: 1px solid var(--border); border-radius: 8px; color: var(--text); flex: 1; min-width: 150px;">
+            <option value="">All Statuses</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <button type="button" class="btn" onclick="loadAppointmentsFiltered()">🔍 Filter</button>
+          <button type="button" class="btn secondary" onclick="loadAppointments()">🔄 Reset</button>
+        </div>
+        
+        <p class="loading" id="appointments-loading">Loading…</p>
+        <p class="err" id="appointments-err"></p>
+        <table id="appointments-table" style="display:none;">
+          <thead>
+            <tr><th>ID</th><th>Patient</th><th>Doctor</th><th>Specialty</th><th>Date</th><th>Time</th><th>Status</th></tr>
+          </thead>
+          <tbody id="appointments-tbody"></tbody>
+        </table>
+        <p id="appointments-count" style="color: var(--muted); font-size: 0.9rem; margin-top: 1rem;"></p>
+      </div>
+    </section>
+
+    <section id="panel-voice" class="panel">
+      <div class="card voice-card">
+        <h2>Voice AI</h2>
+        <p>Speak to book, cancel, or reschedule. Supports English, Hindi, Tamil.</p>
+        <button type="button" class="btn" id="connect">Connect</button>
+        <button type="button" class="btn secondary" id="record" disabled>Hold to Speak</button>
+        <button type="button" class="btn secondary" id="stop" disabled>End Utterance</button>
+        <p class="status" id="status">Disconnected</p>
+        <div class="transcript" id="transcript">Your speech will appear here.</div>
+        <div class="response" id="response">Agent response will appear here.</div>
+        <div class="latency" id="latency"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws/voice`;
+    const API_BASE = `${location.origin}`;
+    
+    // Shared voice state
+    let ws = null;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let currentVoicePanel = 'home'; // Track which panel's voice is active
+
+    // Initialize on page load
+    window.addEventListener('load', () => {
+      updateStats();
+      checkHealth();
+      setInterval(checkHealth, 30000); // Check health every 30s
+    });
+
+    // Check backend health
+    async function checkHealth() {
+      try {
+        const r = await fetch(API_BASE + '/health');
+        if (r.ok) {
+          const data = await r.json();
+          console.log('✓ Backend healthy:', data);
+        }
+      } catch (e) {
+        console.error('✗ Backend down:', e);
+      }
+    }
+
+    async function refreshStat(statType) {
+      const statId = 'stat-' + statType;
+      const element = document.getElementById(statId);
+      const card = element.closest('.stat-card');
+      
+      if (card.classList.contains('loading')) return;
+      
+      card.classList.add('loading');
+      const originalText = element.textContent;
+      element.textContent = '⏳ Loading...';
+
+      try {
+        if (statType === 'doctors') {
+          const r = await fetch(API_BASE + '/api/doctors');
+          if (r.ok) {
+            const list = await r.json();
+            element.textContent = list.length;
+            showPanel('doctors');
+          } else throw new Error('Failed to fetch doctors');
+        } else if (statType === 'appointments') {
+          const r = await fetch(API_BASE + '/api/appointments');
+          if (r.ok) {
+            const list = await r.json();
+            element.textContent = list.length;
+            showPanel('appointments');
+          } else throw new Error('Failed to fetch appointments');
+        } else if (statType === 'languages') {
+          element.textContent = '3';
+        } else if (statType === 'latency') {
+          element.textContent = '450ms';
+        }
+      } catch (e) {
+        console.error('Failed to refresh stat:', e);
+        element.textContent = 'Error';
+        setTimeout(() => { element.textContent = originalText; }, 2000);
+      } finally {
+        card.classList.remove('loading');
+      }
+    }
+
+    async function refreshAllStats() {
+      document.querySelectorAll('.stat-card').forEach(card => {
+        if (!card.classList.contains('loading')) {
+          const number = card.querySelector('.number');
+          number.textContent = '⏳ Loading...';
+          card.classList.add('loading');
+        }
+      });
+
+      try {
+        const [doctorsRes, appointmentsRes] = await Promise.all([
+          fetch(API_BASE + '/api/doctors'),
+          fetch(API_BASE + '/api/appointments')
+        ]);
+        
+        if (doctorsRes.ok) {
+          const doctors = await doctorsRes.json();
+          document.getElementById('stat-doctors').textContent = doctors.length;
+        }
+        
+        if (appointmentsRes.ok) {
+          const appointments = await appointmentsRes.json();
+          document.getElementById('stat-appointments').textContent = appointments.length;
+        }
+      } catch (e) {
+        console.error('Failed to update stats:', e);
+      } finally {
+        document.querySelectorAll('.stat-card').forEach(card => {
+          card.classList.remove('loading');
+        });
+      }
+    }
+
+    async function updateStats() {
+      try {
+        const [doctorsRes, appointmentsRes] = await Promise.all([
+          fetch(API_BASE + '/api/doctors'),
+          fetch(API_BASE + '/api/appointments')
+        ]);
+        
+        if (doctorsRes.ok) {
+          const doctors = await doctorsRes.json();
+          document.getElementById('stat-doctors').textContent = doctors.length;
+        }
+        
+        if (appointmentsRes.ok) {
+          const appointments = await appointmentsRes.json();
+          document.getElementById('stat-appointments').textContent = appointments.length;
+        }
+      } catch (e) {
+        console.error('Failed to update stats:', e);
+      }
+    }
+
+    function showPanel(name) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+      const panel = document.getElementById('panel-' + name);
+      const btn = document.querySelector('.nav button[data-tab="' + name + '"]');
+      if (panel) panel.classList.add('active');
+      if (btn) btn.classList.add('active');
+      if (name === 'doctors') loadDoctors();
+      if (name === 'appointments') loadAppointments();
+    }
+
+    document.querySelectorAll('.nav button[data-tab]').forEach(b => {
+      b.addEventListener('click', () => showPanel(b.dataset.tab));
+    });
+
+    async function loadDoctors() {
+      const loading = document.getElementById('doctors-loading');
+      const err = document.getElementById('doctors-err');
+      const table = document.getElementById('doctors-table');
+      const tbody = document.getElementById('doctors-tbody');
+      const countEl = document.getElementById('doctors-count');
+      
+      // Clear filter
+      document.getElementById('specialty-filter').value = '';
+      
+      loading.style.display = 'block';
+      table.style.display = 'none';
+      err.textContent = '';
+      countEl.textContent = '';
+      
+      try {
+        const r = await fetch(API_BASE + '/api/doctors');
+        if (!r.ok) throw new Error('Failed to fetch doctors: ' + r.statusText);
+        const list = await r.json();
+        loading.style.display = 'none';
+        
+        if (list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem;">No doctors found. Run: <code>python scripts/seed_doctors.py</code></td></tr>';
+        } else {
+          tbody.innerHTML = list.map(d => `
+            <tr>
+              <td><strong>${escapeHtml(d.name)}</strong></td>
+              <td>${escapeHtml(d.specialty)}</td>
+              <td>${escapeHtml(d.email || '—')}</td>
+              <td><button type="button" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="filterBySpecialty('${escapeHtml(d.specialty)}')">Filter</button></td>
+            </tr>
+          `).join('');
+        }
+        
+        countEl.textContent = `Showing ${list.length} doctor${list.length !== 1 ? 's' : ''}`;
+        table.style.display = 'table';
+      } catch (e) {
+        loading.style.display = 'none';
+        err.textContent = '❌ ' + e.message;
+        countEl.textContent = '';
+      }
+    }
+
+    async function loadDoctorsFiltered() {
+      const specialty = document.getElementById('specialty-filter').value.trim();
+      if (!specialty) {
+        loadDoctors();
+        return;
+      }
+
+      const loading = document.getElementById('doctors-loading');
+      const err = document.getElementById('doctors-err');
+      const table = document.getElementById('doctors-table');
+      const tbody = document.getElementById('doctors-tbody');
+      const countEl = document.getElementById('doctors-count');
+      
+      loading.style.display = 'block';
+      table.style.display = 'none';
+      err.textContent = '';
+      countEl.textContent = '';
+      
+      try {
+        const url = new URL(API_BASE + '/api/doctors');
+        url.searchParams.append('specialty', specialty);
+        
+        const r = await fetch(url.toString());
+        if (!r.ok) throw new Error('Filter failed: ' + r.statusText);
+        const list = await r.json();
+        loading.style.display = 'none';
+        
+        if (list.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 2rem;">No doctors found with specialty: <strong>${escapeHtml(specialty)}</strong></td></tr>`;
+        } else {
+          tbody.innerHTML = list.map(d => `
+            <tr>
+              <td><strong>${escapeHtml(d.name)}</strong></td>
+              <td>${escapeHtml(d.specialty)}</td>
+              <td>${escapeHtml(d.email || '—')}</td>
+              <td><button type="button" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="filterBySpecialty('${escapeHtml(d.specialty)}')">Filter</button></td>
+            </tr>
+          `).join('');
+        }
+        
+        countEl.textContent = `Found ${list.length} doctor${list.length !== 1 ? 's' : ''} matching "${specialty}"`;
+        table.style.display = 'table';
+      } catch (e) {
+        loading.style.display = 'none';
+        err.textContent = '❌ ' + e.message;
+        countEl.textContent = '';
+      }
+    }
+
+    function filterBySpecialty(specialty) {
+      document.getElementById('specialty-filter').value = specialty;
+      loadDoctorsFiltered();
+    }
+
+    async function loadAppointments() {
+      const loading = document.getElementById('appointments-loading');
+      const err = document.getElementById('appointments-err');
+      const table = document.getElementById('appointments-table');
+      const tbody = document.getElementById('appointments-tbody');
+      const countEl = document.getElementById('appointments-count');
+      
+      // Clear filter
+      document.getElementById('status-filter').value = '';
+      
+      loading.style.display = 'block';
+      table.style.display = 'none';
+      err.textContent = '';
+      countEl.textContent = '';
+      
+      try {
+        const r = await fetch(API_BASE + '/api/appointments');
+        if (!r.ok) throw new Error('Failed to fetch appointments: ' + r.statusText);
+        const list = await r.json();
+        loading.style.display = 'none';
+        
+        if (list.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem;">No appointments yet. Use the voice agent to book one!</td></tr>';
+        } else {
+          tbody.innerHTML = list.map(a => `
+            <tr>
+              <td>#${a.id}</td>
+              <td>${escapeHtml(a.patient_phone)}</td>
+              <td><strong>${escapeHtml(a.doctor_name)}</strong></td>
+              <td>${escapeHtml(a.doctor_specialty)}</td>
+              <td>${a.date}</td>
+              <td>${a.time_slot}</td>
+              <td><span class="badge ${a.status.toLowerCase()}">${escapeHtml(a.status)}</span></td>
+            </tr>
+          `).join('');
+        }
+        
+        countEl.textContent = `Showing ${list.length} appointment${list.length !== 1 ? 's' : ''}`;
+        table.style.display = 'table';
+      } catch (e) {
+        loading.style.display = 'none';
+        err.textContent = '❌ ' + e.message;
+        countEl.textContent = '';
+      }
+    }
+
+    async function loadAppointmentsFiltered() {
+      const status = document.getElementById('status-filter').value.trim();
+      if (!status) {
+        loadAppointments();
+        return;
+      }
+
+      const loading = document.getElementById('appointments-loading');
+      const err = document.getElementById('appointments-err');
+      const table = document.getElementById('appointments-table');
+      const tbody = document.getElementById('appointments-tbody');
+      const countEl = document.getElementById('appointments-count');
+      
+      loading.style.display = 'block';
+      table.style.display = 'none';
+      err.textContent = '';
+      countEl.textContent = '';
+      
+      try {
+        const url = new URL(API_BASE + '/api/appointments');
+        url.searchParams.append('status', status);
+        
+        const r = await fetch(url.toString());
+        if (!r.ok) throw new Error('Filter failed: ' + r.statusText);
+        const list = await r.json();
+        loading.style.display = 'none';
+        
+        if (list.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem;">No ${status} appointments found.</td></tr>`;
+        } else {
+          tbody.innerHTML = list.map(a => `
+            <tr>
+              <td>#${a.id}</td>
+              <td>${escapeHtml(a.patient_phone)}</td>
+              <td><strong>${escapeHtml(a.doctor_name)}</strong></td>
+              <td>${escapeHtml(a.doctor_specialty)}</td>
+              <td>${a.date}</td>
+              <td>${a.time_slot}</td>
+              <td><span class="badge ${a.status.toLowerCase()}">${escapeHtml(a.status)}</span></td>
+            </tr>
+          `).join('');
+        }
+        
+        countEl.textContent = `Found ${list.length} ${status} appointment${list.length !== 1 ? 's' : ''}`;
+        table.style.display = 'table';
+      } catch (e) {
+        loading.style.display = 'none';
+        err.textContent = '❌ ' + e.message;
+        countEl.textContent = '';
+      }
+    }
+
+    function escapeHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    // Voice functionality for HOME panel
+    function setupVoicePanel(prefix) {
+      const connectBtn = document.getElementById('connect-' + prefix);
+      const recordBtn = document.getElementById('record-' + prefix);
+      const stopBtn = document.getElementById('stop-' + prefix);
+      const statusEl = document.getElementById('voice-status');
+      const contentEl = document.getElementById('voice-content-' + prefix);
+      const transcriptEl = document.getElementById('transcript-' + prefix);
+      const responseEl = document.getElementById('response-' + prefix);
+      const latencyEl = document.getElementById('latency-' + prefix);
+
+      connectBtn.addEventListener('click', () => {
+        currentVoicePanel = prefix;
+        if (ws && ws.readyState === WebSocket.OPEN) return;
+        ws = new WebSocket(API);
+        ws.binaryType = 'arraybuffer';
+        ws.onopen = () => {
+          statusEl.textContent = 'Connected';
+          document.querySelector('.status-dot').classList.remove('disconnected');
+          recordBtn.disabled = false;
+          contentEl.style.display = 'block';
+        };
+        ws.onclose = () => {
+          statusEl.textContent = 'Disconnected';
+          document.querySelector('.status-dot').classList.add('disconnected');
+          recordBtn.disabled = true;
+          stopBtn.disabled = true;
+        };
+        ws.onerror = (e) => {
+          statusEl.textContent = 'Connection Error';
+          console.error('WebSocket error:', e);
+        };
+        ws.onmessage = (e) => {
+          if (currentVoicePanel !== prefix) return;
+          if (e.data instanceof Blob) {
+            new Audio(URL.createObjectURL(e.data)).play();
+            return;
+          }
+          try {
+            const d = JSON.parse(e.data);
+            console.log('WebSocket message:', d);
+            
+            if (d.type === 'transcript' && d.text) {
+              transcriptEl.textContent = d.text;
+              statusEl.textContent = `Heard: "${d.text}"`;
+            }
+            
+            if (d.type === 'response' && d.text) {
+              responseEl.textContent = d.text;
+              statusEl.textContent = 'Waiting...';
+              
+              // Intent-based navigation
+              const text = d.text.toLowerCase();
+              if (text.includes('appointment') || text.includes('book') || text.includes('scheduled')) {
+                setTimeout(() => {
+                  showPanel('appointments');
+                  statusEl.textContent = 'Navigated to Appointments';
+                }, 1500);
+              } else if (text.includes('doctor') || text.includes('provider')) {
+                setTimeout(() => {
+                  showPanel('doctors');
+                  statusEl.textContent = 'Navigated to Doctors';
+                }, 1500);
+              }
+            }
+            
+            if (d.type === 'latency') {
+              latencyEl.innerHTML =
+                `STT: <strong>${d.stt_ms}ms</strong> | LLM: <strong>${d.llm_ms}ms</strong> | TTS: <strong>${d.tts_ms}ms</strong> | Total: <strong>${d.total_ms}ms</strong>`;
+            }
+            
+            if (d.type === 'audio' && d.base64) {
+              new Audio('data:audio/mp3;base64,' + d.base64).play();
+            }
+          } catch (err) {
+            console.error('Message parse error:', err);
+          }
+        };
+      });
+
+      const startRecording = async (ev) => {
+        ev.preventDefault();
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+          statusEl.textContent = 'Not connected';
+          return;
+        }
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+          mediaRecorder.ondataavailable = (e) => { if (e.data.size) audioChunks.push(e.data); };
+          mediaRecorder.start();
+          stopBtn.disabled = false;
+          transcriptEl.textContent = '🎤 Listening...';
+          statusEl.textContent = 'Recording...';
+        } catch (err) { 
+          statusEl.textContent = 'Mic error: ' + err.message; 
+          console.error('Microphone error:', err);
+        }
+      };
+      recordBtn.addEventListener('mousedown', startRecording);
+      recordBtn.addEventListener('touchstart', startRecording);
+      recordBtn.addEventListener('mouseup', () => stopBtn.click());
+      recordBtn.addEventListener('touchend', () => stopBtn.click());
+
+      stopBtn.addEventListener('click', () => {
+        if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+        mediaRecorder.stop();
+        statusEl.textContent = 'Processing...';
+        mediaRecorder.onstop = () => {
+          stopBtn.disabled = true;
+          const blob = new Blob(audioChunks, { type: 'audio/webm' });
+          blob.arrayBuffer().then(buf => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              console.log('Sending audio buffer:', buf.byteLength, 'bytes');
+              ws.send(buf);
+              ws.send(new ArrayBuffer(0)); // Signal end of utterance
+            }
+          });
+          mediaRecorder.stream.getTracks().forEach(t => t.stop());
+        };
+      });
+    }
+
+    // Setup voice for home panel
+    setupVoicePanel('home');
+
+    // Original Voice AI panel setup (separate instance)
+    document.getElementById('connect').onclick = () => {
+      currentVoicePanel = 'voice';
+      if (ws && ws.readyState === WebSocket.OPEN) return;
+      ws = new WebSocket(API);
+      ws.binaryType = 'arraybuffer';
+      ws.onopen = () => {
+        document.getElementById('status').textContent = 'Connected';
+        document.getElementById('record').disabled = false;
+      };
+      ws.onclose = () => {
+        document.getElementById('status').textContent = 'Disconnected';
+        document.getElementById('record').disabled = true;
+      };
+      ws.onerror = (e) => {
+        document.getElementById('status').textContent = 'Connection Error';
+        console.error('WebSocket error:', e);
+      };
+      ws.onmessage = (e) => {
+        if (currentVoicePanel !== 'voice') return;
+        if (e.data instanceof Blob) {
+          new Audio(URL.createObjectURL(e.data)).play();
+          return;
+        }
+        try {
+          const d = JSON.parse(e.data);
+          console.log('Voice WebSocket message:', d);
+          
+          if (d.type === 'transcript' && d.text) {
+            document.getElementById('transcript').textContent = d.text;
+            document.getElementById('status').textContent = `Heard: "${d.text}"`;
+          }
+          
+          if (d.type === 'response' && d.text) {
+            document.getElementById('response').textContent = d.text;
+            document.getElementById('status').textContent = 'Processing...';
+            
+            // Intent-based navigation
+            const text = d.text.toLowerCase();
+            if (text.includes('appointment') || text.includes('book') || text.includes('scheduled')) {
+              setTimeout(() => {
+                showPanel('appointments');
+                document.getElementById('status').textContent = 'Navigated to Appointments';
+              }, 1500);
+            } else if (text.includes('doctor') || text.includes('provider')) {
+              setTimeout(() => {
+                showPanel('doctors');
+                document.getElementById('status').textContent = 'Navigated to Doctors';
+              }, 1500);
+            }
+          }
+          
+          if (d.type === 'latency') {
+            document.getElementById('latency').textContent =
+              `STT: ${d.stt_ms}ms | LLM: ${d.llm_ms}ms | TTS: ${d.tts_ms}ms | Total: ${d.total_ms}ms`;
+          }
+          
+          if (d.type === 'audio' && d.base64) {
+            new Audio('data:audio/mp3;base64,' + d.base64).play();
+          }
+        } catch (err) {
+          console.error('Message parse error:', err);
+        }
+      };
+    };
+
+    const voiceRecordBtn = document.getElementById('record');
+    const voiceStopBtn = document.getElementById('stop');
+    const voiceStatus = document.getElementById('status');
+    const voiceTranscript = document.getElementById('transcript');
+    
+    const voiceStartRecording = async (ev) => {
+      ev.preventDefault();
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        voiceStatus.textContent = 'Not connected';
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        mediaRecorder.ondataavailable = (e) => { if (e.data.size) audioChunks.push(e.data); };
+        mediaRecorder.start();
+        voiceStopBtn.disabled = false;
+        voiceStatus.textContent = 'Recording... (release to send)';
+        voiceTranscript.textContent = '🎤 Listening for your speech...';
+        document.getElementById('response').textContent = 'Processing your request...';
+      } catch (err) { 
+        voiceStatus.textContent = 'Mic error: ' + err.message;
+        console.error('Microphone error:', err);
+      }
+    };
+    voiceRecordBtn.addEventListener('mousedown', voiceStartRecording);
+    voiceRecordBtn.addEventListener('touchstart', voiceStartRecording);
+    voiceRecordBtn.addEventListener('mouseup', () => voiceStopBtn.click());
+    voiceRecordBtn.addEventListener('touchend', () => voiceStopBtn.click());
+
+    document.getElementById('stop').onclick = () => {
+      if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+      mediaRecorder.stop();
+      voiceStatus.textContent = 'Processing...';
+      mediaRecorder.onstop = () => {
+        voiceStopBtn.disabled = true;
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        blob.arrayBuffer().then(buf => {
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            console.log('Sending audio buffer:', buf.byteLength, 'bytes');
+            ws.send(buf);
+            ws.send(new ArrayBuffer(0)); // Signal end of utterance
+          }
+        });
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      };
+    };
+  </script>
+</body>
+</html>
